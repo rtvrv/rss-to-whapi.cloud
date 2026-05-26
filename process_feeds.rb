@@ -123,39 +123,26 @@ def send_item_to_whatsapp(item)
   puts "Success!"
 end
 
-# Main program
+# Main program (TIJDELIJKE FAST-FORWARD VERSIE)
 feeds = load_feeds
-
-# Collect all items from all feeds
-all_items = []
 
 feeds.each do |feed|
   feed_name = feed['name']
   feed_url = feed['url']
-  seen_guids = feed['seen'] || []
+  feed['seen'] ||= []
 
+  puts "Bezig met ophalen van de huidige feed voor: #{feed_name}..."
   doc = fetch_feed(feed_url)
-  items = extract_items(doc, feed_name, seen_guids)
-  all_items.concat(items)
-end
-
-# Find the oldest item
-if all_items.empty?
-  puts "No new items found."
-  exit 0
-end
-
-oldest_item = all_items.min_by { |item| item[:pub_date] }
-
-# Print the oldest item
-send_item_to_whatsapp(oldest_item)
-
-# Update feeds.json to mark this item as seen
-feeds.each do |feed|
-  if feed['name'] == oldest_item[:feed_name]
-    feed['seen'] ||= []
-    feed['seen'] << oldest_item[:guid] unless feed['seen'].include?(oldest_item[:guid])
+  items = extract_items(doc, feed_name, feed['seen'])
+  
+  # Voeg alle ontdekte artikelen direct toe aan de geschiedenis zonder ze te verzenden
+  items.each do |item|
+    feed['seen'] << item[:guid] unless feed['seen'].include?(item[:guid])
   end
+  
+  puts "Succesvol #{items.size} historische berichten gemarkeerd als gelezen voor #{feed_name}."
 end
 
+# Sla de geactualiseerde lijst op in feeds.json
 save_feeds(feeds)
+puts "De database is succesvol bijgewerkt naar het heden. Er zijn geen WhatsApp-berichten verstuurd."
