@@ -1,7 +1,10 @@
 [
   {
     "name": "RTV Ronde Venen Nieuws",
-    "url": "https://rtvrondevenen.nl/nieuws/feed/"
+    "url": "https://rtvrondevenen.nl/nieuws/feed/",
+    "seen": [
+      "https://rtvrondevenen.nl/?p=16075"
+    ]
   },
   {
     "name": "RTV Ronde Venen",
