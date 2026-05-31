@@ -123,10 +123,10 @@ def send_item_to_whatsapp(item)
   puts "Success!"
 end
 
-# Main program
+# Main program (GEOPTIMALISEERD VOOR DIRECTE DOORVOER)
 feeds = load_feeds
 
-# Collect all items from all feeds
+# Verzamel alle nieuwe items van alle feeds
 all_items = []
 
 feeds.each do |feed|
@@ -139,23 +139,31 @@ feeds.each do |feed|
   all_items.concat(items)
 end
 
-# Find the oldest item
 if all_items.empty?
   puts "No new items found."
   exit 0
 end
 
-oldest_item = all_items.min_by { |item| item[:pub_date] }
+# Sorteer de nieuwe items van oud naar nieuw, zodat ze in de juiste chronologische volgorde in WhatsApp verschijnen
+new_items = all_items.sort_by { |item| item[:pub_date] }
 
-# Print the oldest item
-send_item_to_whatsapp(oldest_item)
+puts "Er zijn #{new_items.size} nieuwe bericht(en) gevonden. Start met verzenden..."
 
-# Update feeds.json to mark this item as seen
-feeds.each do |feed|
-  if feed['name'] == oldest_item[:feed_name]
-    feed['seen'] ||= []
-    feed['seen'] << oldest_item[:guid] unless feed['seen'].include?(oldest_item[:guid])
+# Verwerk en verzend elk nieuw item direct
+new_items.each do |item|
+  send_item_to_whatsapp(item)
+
+  # Update direct feeds.json voor dit specifieke item
+  feeds.each do |feed|
+    if feed['name'] == item[:feed_name]
+      feed['seen'] ||= []
+      feed['seen'] << item[:guid] unless feed['seen'].include?(item[:guid])
+    end
   end
+  save_feeds(feeds)
+  
+  # Neem 3 seconden pauze tussen de berichten om de WhatsApp-server ademruimte te geven en link-previews te garanderen
+  sleep 3
 end
 
-save_feeds(feeds)
+puts "Alle nieuwe berichten zijn succesvol verwerkt."
